@@ -1,5 +1,5 @@
 from rest_framework import serializers
-
+from .security_utils import hash_password
 from .models import (Usuarios, Roles, Permisos, PermisosPorRoles, TipoProductos, Productos, Fiados, ProductosPorFiados, Auditorias)
 
 class UsuariosSerializer(serializers.ModelSerializer):
@@ -16,6 +16,19 @@ class UsuariosSerializer(serializers.ModelSerializer):
             'id_rol'
         ]
         read_only_fields = ['fecha_ingreso_usu']
+    def create(self, validated_data):
+        plain_password = validated_data.pop('hash_contrasena_usu')
+        if not plain_password:
+            raise serializers.ValidationError("La contraseña no puede estar vacía.")
+        validated_data['hash_contrasena_usu'] = hash_password(plain_password)
+        return super().create(validated_data)
+
+
+    def update(self, instance, validated_data):
+        if 'hash_contrasena_usu' in validated_data:
+            plain_password = validated_data.pop('hash_contrasena_usu')
+            validated_data['hash_contrasena_usu'] = hash_password(plain_password)
+        return super().update(instance, validated_data)
 
 class RolesSerializer(serializers.ModelSerializer):
     class Meta:

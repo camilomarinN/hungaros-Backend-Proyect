@@ -1,5 +1,6 @@
 from django.urls import path, include
 from rest_framework import routers
+from .appLogin import LoginView
 from .Api import (
     UsuariosViewSet, RolesViewSet, PermisosViewSet, PermisosPorRolesViewSet,
     TipoProductosViewSet, ProductosViewSet, FiadosViewSet, ProductosPorFiadosViewSet,
@@ -18,5 +19,6 @@ router.register('productos_por_fiados', ProductosPorFiadosViewSet, basename='pro
 router.register('auditorias', AuditoriasViewSet, basename='auditorias')
 
 urlpatterns = [
+    path('api/login/', LoginView.as_view(), name='login'),
     path('api/', include(router.urls)),
 ]
