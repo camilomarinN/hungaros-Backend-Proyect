@@ -1,67 +1,123 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, serializers
-from drf_spectacular.utils import extend_schema, OpenApiExample
-from .models import Usuarios
-from hungarosApps.security_utils import verify_password
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
+from drf_spectacular.utils import extend_schema
+
+from .serializers import ErrorResponseSerializer
+from .auth_services import authenticate_user, create_single_session_token
+
+
+# ============================================================
+# ===================== REQUEST SERIALIZER ===================
+# ============================================================
 
 class LoginSerializer(serializers.Serializer):
     id_usuario = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
 
+# ============================================================
+# ===================== RESPONSE SERIALIZERS =================
+# ============================================================
+
+class LoginUserSerializer(serializers.Serializer):
+    id_usuario = serializers.CharField()
+    nombre = serializers.CharField()
+    rol = serializers.CharField()
+
+
 class LoginResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField()
     message = serializers.CharField()
-    usuario = serializers.DictField()
+    token = serializers.CharField()
+    usuario = LoginUserSerializer()
+
+
+# ============================================================
+# ===================== LOGIN VIEW ===========================
+# ============================================================
 
 class LoginView(APIView):
+    permission_classes = [AllowAny]
+
     @extend_schema(
         request=LoginSerializer,
         responses={
             200: LoginResponseSerializer,
-            401: OpenApiExample(
-                'Credenciales inválidas',
-                summary="Error de autenticación",
-                value={"error": "Contraseña incorrecta"},
-                status_codes=["401"]
-            ),
-            404: OpenApiExample(
-                'Usuario no encontrado',
-                value={"error": "Usuario no encontrado"},
-                status_codes=["404"]
-            )
+            400: ErrorResponseSerializer,
+            401: ErrorResponseSerializer,
+            500: ErrorResponseSerializer,
         },
-        description="Endpoint para iniciar sesión de usuario y validar credenciales."
+        description="""
+        Endpoint de login.
+
+        - Valida credenciales
+        - Soporta usuarios legacy
+        - Migra contraseñas a Argon2 automáticamente
+        - Garantiza una sola sesión activa por usuario
+        """
     )
     def post(self, request):
-        id_usuario = request.data.get('id_usuario')
-        password = request.data.get('password')
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        if not id_usuario or not password:
-            return Response(
-                {"error": "Debe proporcionar id_usuario y password"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        id_usuario = serializer.validated_data["id_usuario"].strip()
+        password = serializer.validated_data["password"]
 
-        try:
-            user = Usuarios.objects.get(id_usuario=id_usuario)
-        except Usuarios.DoesNotExist:
-            return Response(
-                {"error": "Usuario no encontrado"},
-                status=status.HTTP_404_NOT_FOUND
-            )
+        usuario = authenticate_user(id_usuario, password)
 
-        if verify_password(user.hash_contrasena_usu, password):
-            return Response({
-                "message": "Login exitoso",
-                "usuario": {
-                    "id_usuario": user.id_usuario,
-                    "nombre": user.nombre_usu,
-                    "rol": user.id_rol.nombre_rol
-                }
-            }, status=status.HTTP_200_OK)
-        else:
+        if not usuario:
             return Response(
-                {"error": "Contraseña incorrecta"},
+                {
+                    "success": False,
+                    "message": "Credenciales inválidas",
+                    "errors": None
+                },
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+        token = create_single_session_token(usuario)
+
+        return Response(
+            {
+                "success": True,
+                "message": "Login exitoso",
+                "token": token.key,
+                "usuario": {
+                    "id_usuario": usuario.id_usuario,
+                    "nombre": usuario.nombre_usu,
+                    "rol": usuario.id_rol.nombre_rol,
+                }
+            },
+            status=status.HTTP_200_OK
+        )
+
+
+# ============================================================
+# ===================== LOGOUT VIEW ==========================
+# ============================================================
+
+class LogoutResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField()
+    message = serializers.CharField()
+
+
+class LogoutView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        responses={200: LogoutResponseSerializer}
+    )
+    def post(self, request):
+        request.auth.delete()
+
+        return Response(
+            {
+                "success": True,
+                "message": "Sesión cerrada correctamente"
+            },
+            status=status.HTTP_200_OK
+        )

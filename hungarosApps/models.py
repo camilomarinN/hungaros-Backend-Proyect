@@ -67,13 +67,12 @@ class ProductosPorFiados(models.Model):
 
 
 class Roles(models.Model):
-    id_rol = models.BigIntegerField(primary_key=True)
+    id_rol = models.BigAutoField(primary_key=True)
     nombre_rol = models.CharField(unique=True, max_length=20, blank=False, null=False)
 
     class Meta:
         managed = False
         db_table = 'roles'
-
 
 class TipoProductos(models.Model):
     id_tipo_producto = models.IntegerField(primary_key=True)

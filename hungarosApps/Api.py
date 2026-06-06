@@ -1,4 +1,5 @@
-from rest_framework import viewsets, permissions
+from .base_viewset import BaseModelViewSet
+from rest_framework import permissions, status
 from .models import (
     Usuarios, Roles, Permisos, PermisosPorRoles, TipoProductos,
     Productos, Fiados, ProductosPorFiados, Auditorias
@@ -9,47 +10,47 @@ from .serializers import (
     AuditoriasSerializer
 )
 
-class UsuariosViewSet(viewsets.ModelViewSet):
+class UsuariosViewSet(BaseModelViewSet):
     queryset = Usuarios.objects.all()
     serializer_class = UsuariosSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class RolesViewSet(viewsets.ModelViewSet):
+class RolesViewSet(BaseModelViewSet):
     queryset = Roles.objects.all()
     serializer_class = RolesSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class PermisosViewSet(viewsets.ModelViewSet):
+class PermisosViewSet(BaseModelViewSet):
     queryset = Permisos.objects.all()
     serializer_class = PermisosSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class PermisosPorRolesViewSet(viewsets.ModelViewSet):
+class PermisosPorRolesViewSet(BaseModelViewSet):
     queryset = PermisosPorRoles.objects.all()
     serializer_class = PermisosPorRolesSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class TipoProductosViewSet(viewsets.ModelViewSet):
+class TipoProductosViewSet(BaseModelViewSet):
     queryset = TipoProductos.objects.all()
     serializer_class = TipoProductosSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class ProductosViewSet(viewsets.ModelViewSet):
+class ProductosViewSet(BaseModelViewSet):
     queryset = Productos.objects.all()
     serializer_class = ProductosSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class FiadosViewSet(viewsets.ModelViewSet):
+class FiadosViewSet(BaseModelViewSet):
     queryset = Fiados.objects.all()
     serializer_class = FiadosSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class ProductosPorFiadosViewSet(viewsets.ModelViewSet):
+class ProductosPorFiadosViewSet(BaseModelViewSet):
     queryset = ProductosPorFiados.objects.all()
     serializer_class = ProductosPorFiadosSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class AuditoriasViewSet(viewsets.ModelViewSet):
+class AuditoriasViewSet(BaseModelViewSet):
     queryset = Auditorias.objects.all()
     serializer_class = AuditoriasSerializer
     permission_classes = [permissions.IsAuthenticated]

@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework import routers
-from .appLogin import LoginView
+from .appLogin import LoginView, LogoutView
 from .Api import (
     UsuariosViewSet, RolesViewSet, PermisosViewSet, PermisosPorRolesViewSet,
     TipoProductosViewSet, ProductosViewSet, FiadosViewSet, ProductosPorFiadosViewSet,
@@ -20,5 +20,6 @@ router.register('auditorias', AuditoriasViewSet, basename='auditorias')
 
 urlpatterns = [
     path('api/login/', LoginView.as_view(), name='login'),
+    path("api/logout/", LogoutView.as_view(), name="logout"),
     path('api/', include(router.urls)),
 ]

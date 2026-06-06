@@ -1,9 +1,34 @@
 from rest_framework import serializers
 from .security_utils import hash_password
-from .models import (Usuarios, Roles, Permisos, PermisosPorRoles, TipoProductos, Productos, Fiados, ProductosPorFiados, Auditorias)
+from .models import (
+    Usuarios, Roles, Permisos, PermisosPorRoles,
+    TipoProductos, Productos, Fiados,
+    ProductosPorFiados, Auditorias
+)
+
+# ============================================================
+# ===================== RESPUESTAS BASE =======================
+# ============================================================
+
+class StandardResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField()
+    message = serializers.CharField()
+    data = serializers.JSONField(required=False, allow_null=True)
+
+
+class ErrorResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField(default=False)
+    message = serializers.CharField()
+    errors = serializers.JSONField(required=False, allow_null=True)
+
+
+# ============================================================
+# ===================== MODELO SERIALIZERS ===================
+# ============================================================
 
 class UsuariosSerializer(serializers.ModelSerializer):
     hash_contrasena_usu = serializers.CharField(write_only=True)
+
     class Meta:
         model = Usuarios
         fields = [
@@ -16,6 +41,7 @@ class UsuariosSerializer(serializers.ModelSerializer):
             'id_rol'
         ]
         read_only_fields = ['fecha_ingreso_usu']
+
     def create(self, validated_data):
         plain_password = validated_data.pop('hash_contrasena_usu')
         if not plain_password:
@@ -23,12 +49,12 @@ class UsuariosSerializer(serializers.ModelSerializer):
         validated_data['hash_contrasena_usu'] = hash_password(plain_password)
         return super().create(validated_data)
 
-
     def update(self, instance, validated_data):
         if 'hash_contrasena_usu' in validated_data:
             plain_password = validated_data.pop('hash_contrasena_usu')
             validated_data['hash_contrasena_usu'] = hash_password(plain_password)
         return super().update(instance, validated_data)
+
 
 class RolesSerializer(serializers.ModelSerializer):
     class Meta:
@@ -36,17 +62,24 @@ class RolesSerializer(serializers.ModelSerializer):
         fields = ['id_rol', 'nombre_rol']
         read_only_fields = ['id_rol']
 
+    def validate_nombre_rol(self, value):
+        if Roles.objects.filter(nombre_rol=value).exists():
+            raise serializers.ValidationError("Ya existe un rol con ese nombre.")
+        return value
+
+
 class PermisosSerializer(serializers.ModelSerializer):
     class Meta:
         model = Permisos
         fields = ['id_permiso', 'nombre_permiso']
         read_only_fields = ['id_permiso']
 
+
 class PermisosPorRolesSerializer(serializers.ModelSerializer):
     class Meta:
         model = PermisosPorRoles
         fields = ['id_rol', 'id_permiso']
-        read_only_fields = []
+
 
 class TipoProductosSerializer(serializers.ModelSerializer):
     class Meta:
@@ -54,11 +87,13 @@ class TipoProductosSerializer(serializers.ModelSerializer):
         fields = ['id_tipo_producto', 'nombre_tipo_producto']
         read_only_fields = ['id_tipo_producto']
 
+
 class ProductosSerializer(serializers.ModelSerializer):
     class Meta:
         model = Productos
         fields = ['id_producto', 'nombre_producto', 'precio_producto', 'id_tipo_producto']
         read_only_fields = ['id_producto']
+
 
 class FiadosSerializer(serializers.ModelSerializer):
     class Meta:
@@ -66,11 +101,12 @@ class FiadosSerializer(serializers.ModelSerializer):
         fields = ['id_fiado', 'id_usuario_fiado', 'fecha_fiado', 'valor_fiado', 'descripcion_fiado']
         read_only_fields = ['id_fiado']
 
+
 class ProductosPorFiadosSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductosPorFiados
         fields = ['id_fiado', 'id_producto']
-        read_only_fields = []
+
 
 class AuditoriasSerializer(serializers.ModelSerializer):
     class Meta:
