@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Auditorias(models.Model):
-    id_auditoria = models.BigIntegerField(primary_key=True)
+    id_auditoria = models.BigAutoField(primary_key=True)
     id_usuario = models.ForeignKey('Usuarios', models.DO_NOTHING, db_column='id_usuario', blank=False, null=False)
     fecha_auditoria = models.DateField(blank=False, null=False)
     accion_auditoria = models.CharField(max_length=20, blank=False, null=False)
@@ -15,11 +15,11 @@ class Auditorias(models.Model):
 
 
 class Fiados(models.Model):
-    id_fiado = models.BigIntegerField(primary_key=True)
+    id_fiado = models.BigAutoField(primary_key=True)
     id_usuario_fiado = models.ForeignKey('Usuarios', models.DO_NOTHING, db_column='id_usuario_fiado', blank=False, null=False)
     fecha_fiado = models.DateField(blank=False, null=False)
-    valor_fiado = models.IntegerField(blank=False, null=False)
-    descripcion_fiado = models.CharField(max_length=50, blank=False, null=False)
+    valor_fiado = models.DecimalField(max_digits=10, decimal_places=2, blank=False, null=False)
+    descripcion_fiado = models.CharField(max_length=100, blank=False, null=False)
 
     class Meta:
         managed = False
@@ -27,7 +27,7 @@ class Fiados(models.Model):
 
 
 class Permisos(models.Model):
-    id_permiso = models.BigIntegerField(primary_key=True)
+    id_permiso = models.BigAutoField(primary_key=True)
     nombre_permiso = models.CharField(unique=True, max_length=20, blank=False, null=False)
 
     class Meta:
@@ -46,10 +46,10 @@ class PermisosPorRoles(models.Model):
 
 
 class Productos(models.Model):
-    id_producto = models.BigIntegerField(primary_key=True)
+    id_producto = models.BigAutoField(primary_key=True)
     nombre_producto = models.CharField(unique=True, max_length=50, blank=False, null=False)
-    precio_producto = models.IntegerField(blank=False, null=False)
-    id_tipo_producto = models.ForeignKey('Tipoproductos', models.DO_NOTHING, db_column='id_tipo_producto', blank=False, null=False)
+    precio_producto = models.DecimalField(max_digits=10, decimal_places=2, blank=False, null=False)
+    id_tipo_producto = models.ForeignKey('TipoProductos', models.DO_NOTHING, db_column='id_tipo_producto', blank=False, null=False)
 
     class Meta:
         managed = False
@@ -60,6 +60,7 @@ class ProductosPorFiados(models.Model):
     pk = models.CompositePrimaryKey('id_fiado', 'id_producto')
     id_fiado = models.ForeignKey(Fiados, models.DO_NOTHING, db_column='id_fiado')
     id_producto = models.ForeignKey(Productos, models.DO_NOTHING, db_column='id_producto')
+    cantidad = models.IntegerField(blank=False, null=False)
 
     class Meta:
         managed = False
@@ -74,8 +75,9 @@ class Roles(models.Model):
         managed = False
         db_table = 'roles'
 
+
 class TipoProductos(models.Model):
-    id_tipo_producto = models.IntegerField(primary_key=True)
+    id_tipo_producto = models.AutoField(primary_key=True)
     nombre_tipo_producto = models.CharField(unique=True, max_length=50, blank=False, null=False)
 
     class Meta:

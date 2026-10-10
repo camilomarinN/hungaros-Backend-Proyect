@@ -6,13 +6,8 @@ from .serializers import StandardResponseSerializer, ErrorResponseSerializer
 
 
 class BaseModelViewSet(ModelViewSet):
-    """
-    ViewSet base que estandariza todas las respuestas de la API.
-    """
-
-    # ============================================================
+    
     # ===================== RESPUESTAS BASE ======================
-    # ============================================================
 
     def success_response(self, message, data=None, status_code=status.HTTP_200_OK):
         return Response({
@@ -31,9 +26,7 @@ class BaseModelViewSet(ModelViewSet):
     def get_model_name(self):
         return self.get_queryset().model._meta.verbose_name.capitalize()
 
-    # ============================================================
     # ===================== CREATE GLOBAL ========================
-    # ============================================================
 
     @extend_schema(
         responses={
@@ -52,9 +45,7 @@ class BaseModelViewSet(ModelViewSet):
             status.HTTP_201_CREATED
         )
 
-    # ============================================================
     # ===================== UPDATE GLOBAL ========================
-    # ============================================================
 
     @extend_schema(
         responses={
@@ -74,9 +65,7 @@ class BaseModelViewSet(ModelViewSet):
             serializer.data
         )
 
-    # ============================================================
     # ===================== DELETE GLOBAL ========================
-    # ============================================================
 
     @extend_schema(
         responses={
@@ -91,9 +80,7 @@ class BaseModelViewSet(ModelViewSet):
             f"{self.get_model_name()} eliminado correctamente"
         )
 
-    # ============================================================
     # ===================== RETRIEVE GLOBAL ======================
-    # ============================================================
 
     @extend_schema(
         responses={
@@ -109,9 +96,7 @@ class BaseModelViewSet(ModelViewSet):
             serializer.data
         )
 
-    # ============================================================
     # ===================== LIST GLOBAL ==========================
-    # ============================================================
 
     @extend_schema(
         responses={

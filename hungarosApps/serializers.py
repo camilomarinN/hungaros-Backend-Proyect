@@ -6,9 +6,7 @@ from .models import (
     ProductosPorFiados, Auditorias
 )
 
-# ============================================================
 # ===================== RESPUESTAS BASE =======================
-# ============================================================
 
 class StandardResponseSerializer(serializers.Serializer):
     success = serializers.BooleanField()
@@ -21,24 +19,27 @@ class ErrorResponseSerializer(serializers.Serializer):
     message = serializers.CharField()
     errors = serializers.JSONField(required=False, allow_null=True)
 
-
-# ============================================================
 # ===================== MODELO SERIALIZERS ===================
-# ============================================================
+
+class RolBriefSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Roles
+        fields = ['id_rol', 'nombre_rol']
+
 
 class UsuariosSerializer(serializers.ModelSerializer):
     hash_contrasena_usu = serializers.CharField(write_only=True)
+    id_rol = RolBriefSerializer(read_only=True)
+    id_rol_id = serializers.PrimaryKeyRelatedField(
+        queryset=Roles.objects.all(), source='id_rol', write_only=True
+    )
 
     class Meta:
         model = Usuarios
         fields = [
-            'id_usuario',
-            'nombre_usu',
-            'primer_apellido_usu',
-            'segundo_apellido_usu',
-            'hash_contrasena_usu',
-            'fecha_ingreso_usu',
-            'id_rol'
+            'id_usuario', 'nombre_usu', 'primer_apellido_usu',
+            'segundo_apellido_usu', 'hash_contrasena_usu',
+            'fecha_ingreso_usu', 'id_rol', 'id_rol_id'
         ]
         read_only_fields = ['fecha_ingreso_usu']
 
@@ -47,7 +48,9 @@ class UsuariosSerializer(serializers.ModelSerializer):
         if not plain_password:
             raise serializers.ValidationError("La contraseña no puede estar vacía.")
         validated_data['hash_contrasena_usu'] = hash_password(plain_password)
-        return super().create(validated_data)
+        instance = super().create(validated_data)
+        instance.refresh_from_db()
+        return instance
 
     def update(self, instance, validated_data):
         if 'hash_contrasena_usu' in validated_data:
@@ -105,7 +108,7 @@ class FiadosSerializer(serializers.ModelSerializer):
 class ProductosPorFiadosSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductosPorFiados
-        fields = ['id_fiado', 'id_producto']
+        fields = ['id_fiado', 'id_producto', 'cantidad']
 
 
 class AuditoriasSerializer(serializers.ModelSerializer):
